@@ -25,7 +25,7 @@
    <property name="title">
     <string>Collections</string>
    </property>
-   <widget class="QComboBox" name="comboBox">
+   <widget class="QComboBox" name="coverage_selection">
     <property name="geometry">
      <rect>
       <x>15</x>
@@ -48,27 +48,14 @@
    <property name="title">
     <string>Band</string>
    </property>
-   <widget class="QComboBox" name="comboBox_2">
+   <widget class="QComboBox" name="bands_selection">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>40</y>
-      <width>280</width>
+      <width>321</width>
       <height>25</height>
      </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton">
-    <property name="geometry">
-     <rect>
-      <x>300</x>
-      <y>40</y>
-      <width>35</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
     </property>
    </widget>
   </widget>
@@ -84,7 +71,7 @@
    <property name="title">
     <string>Start Date:</string>
    </property>
-   <widget class="QDateEdit" name="dateEdit">
+   <widget class="QDateEdit" name="start_date">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -92,6 +79,9 @@
       <width>150</width>
       <height>26</height>
      </rect>
+    </property>
+    <property name="displayFormat">
+     <string>yyyy/MM/dd</string>
     </property>
    </widget>
   </widget>
@@ -107,7 +97,7 @@
    <property name="title">
     <string>End Date:</string>
    </property>
-   <widget class="QDateEdit" name="dateEdit_2">
+   <widget class="QDateEdit" name="end_date">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -115,6 +105,9 @@
       <width>150</width>
       <height>26</height>
      </rect>
+    </property>
+    <property name="displayFormat">
+     <string>yyyy/MM/dd</string>
     </property>
    </widget>
   </widget>
@@ -164,7 +157,7 @@
     </property>
    </widget>
   </widget>
-  <widget class="QPushButton" name="pushButton_3">
+  <widget class="QPushButton" name="search">
    <property name="geometry">
     <rect>
      <x>60</x>

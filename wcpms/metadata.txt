@@ -3,9 +3,9 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=WCPMS Plugin for QGIS 
+name=WCPMS Plugin for QGIS
 qgisMinimumVersion=3.0
-description=WCPMS Plugin for QGIS 
+description=WCPMS Plugin for QGIS
 version=0.1
 author=INPE
 email=gabriel.sansigolo@inpe.br
@@ -27,7 +27,7 @@ tags=python
 
 homepage=http://homepage
 category=Web
-icon=icon.png
+icon=./controller/assets/icon.png
 # experimental flag
 experimental=False
 
