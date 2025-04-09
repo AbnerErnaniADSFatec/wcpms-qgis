@@ -58,22 +58,17 @@ class Controls:
         msg.setWindowTitle(title)
         msg.setText(text)
         msg.setStandardButtons(QMessageBox.Ok)
-        retval = msg.exec_()
 
-    def formatForQDate(self, date_string):
+    def getNowDateString(self, date_string = None):
+        """Get date today to init controls."""
+        date_string = datetime.today().strftime('%Y-%m-%d')
+        return date_string
+
+    def formatQDate(self, date_string):
         """Return a QDate format.
 
         :param date_string<string>: date string with 'yyyy-mm-dd' format.
         """
-        return QDate(
-            int(date_string[:4]),
-            int(date_string[5:-3]),
-            int(date_string[8:])
-        )
-
-    def getNowFormatQDate(self):
-        """Get date today to init controls."""
-        date_string = datetime.today().strftime('%Y-%m-%d')
         return QDate(
             int(date_string[:4]),
             int(date_string[5:-3]),

@@ -25,9 +25,16 @@ import os.path
 import webbrowser
 from pathlib import Path
 
+import time
+
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, Qt, QTranslator
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
+from qgis.gui import QgsMapToolEmitPoint, QgsMapToolPan
+from qgis.core import (QgsCoordinateReferenceSystem, QgsFeature, QgsPoint,
+                       QgsProject, QgsRasterMarkerSymbolLayer, QgsRectangle,
+                       QgsSingleSymbolRenderer, QgsSymbol, QgsVectorLayer,
+                       QgsWkbTypes)
 
 from .controller.config import Config
 from .controller.wcpms_qgis_controller import Controls, WCPMS_Controls
@@ -183,15 +190,134 @@ class WCPMS:
 
     def initControls(self):
         """Init basic controls to generate files and manage services."""
+        self.points_layer_icon_path = str(Path(Config.BASE_DIR) / 'assets' / 'marker-icon.png')
+        icon = QIcon(str(Path(Config.BASE_DIR) / 'assets' / 'zoom-icon.png'))
+        self.dlg.zoom_selected_point.setIcon(icon)
         self.dlg.setWindowFlag(Qt.WindowMaximizeButtonHint, False)
         self.dlg.setFixedSize(self.dlg.size().width(), self.dlg.size().height())
         self.wcpms_controls = WCPMS_Controls()
         self.basic_controls = Controls()
+        self.enabled_click = True
+        self.addCanvasControlPoint(self.enabled_click)
+        self.dlg.zoom_selected_point.clicked.connect(self.zoom_to_selected_point)
+        self.dlg.zoom_selected_point.setEnabled(True)
+        self.checkFilters()
+
+    def zoom_to_point(self, longitude, latitude, scale = None):
+        """Zoom in to selected location using longitude and latitude."""
+        time.sleep(0.30)
+        canvas = self.iface.mapCanvas()
+        if not scale:
+            scale = 200 * (1 / canvas.scale())
+        canvas.setExtent(
+            QgsRectangle(
+                float(longitude) - scale,
+                float(latitude) - scale,
+                float(longitude) + scale,
+                float(latitude) + scale
+            )
+        )
+        canvas.refresh()
+
+    def zoom_to_selected_point(self):
+        """Zoom to selected point."""
+        self.addCanvasControlPoint(self.enabled_click)
+        if (self.dlg.input_longitude.value() != 0 and self.dlg.input_latitude.value() != 0):
+            self.dlg.zoom_selected_point.setEnabled(True)
+            self.display_point(None)
+            self.zoom_to_point(
+                str(self.dlg.input_longitude.value()),
+                str(self.dlg.input_latitude.value()),
+                scale = 0.1
+            )
+
+    def setCRS(self):
+        """Set the CRS in project instance."""
+        QgsProject.instance().setCrs(QgsCoordinateReferenceSystem(int("4326")))
+
+    def display_point(self, pointTool):
+        """Get the mouse possition and storage as selected location."""
+        x = None
+        y = None
+        if pointTool == None:
+            x = self.dlg.input_longitude.value()
+            y = self.dlg.input_latitude.value()
+        else:
+            x = float(pointTool.x())
+            y = float(pointTool.y())
+            self.dlg.input_longitude.setValue(x)
+            self.dlg.input_latitude.setValue(y)
+        try:
+            self.draw_point(x, y)
+        except AttributeError:
+            pass
+        self.checkFilters()
+
+    def addCanvasControlPoint(self, enable):
+        """Generate a canvas area to get mouse position."""
+        self.point_tool = None
+        self.pan_map = None
+        self.canvas = self.iface.mapCanvas()
+        if enable:
+            self.setCRS()
+            self.point_tool = QgsMapToolEmitPoint(self.canvas)
+            self.point_tool.canvasClicked.connect(self.display_point)
+            self.canvas.setMapTool(self.point_tool)
+        else:
+            self.pan_map = QgsMapToolPan(self.canvas)
+            self.canvas.setMapTool(self.pan_map)
+
+    def set_draw_point(self, longitude, latitude):
+        """Create featur to draw temporary point in canvas."""
+        feature = QgsFeature()
+        feature.setGeometry(QgsPoint(float(longitude), float(latitude)))
+        self.points_layer_data_provider.truncate()
+        self.points_layer_data_provider.addFeatures([feature])
+        self.points_layer_data_provider.forceReload()
+
+    def getLayers(self):
+        """Storage the layers in QGIS project."""
+        self.layers = QgsProject.instance().layerTreeRoot().children()
+        self.layer_names = [layer.name() for layer in self.layers] # Get all layer names
+        self.layer = self.iface.activeLayer() # QVectorLayer QRasterFile
+
+    def remove_layer_by_name(self, layer_name):
+        """Remove a layer using name."""
+        for layer in QgsProject.instance().mapLayers().values():
+            if layer.name() == layer_name:
+                QgsProject.instance().removeMapLayer(layer.id())
+
+    def draw_point(self, longitude, latitude):
+        """Draw the selected points in canvas."""
+        self.getLayers()
+        if len(self.layers) > 0:
+            self.setCRS()
+            points_layer_name = "wtss_coordinates_history"
+            points_layer_icon_size = 10
+            try:
+                self.set_draw_point(longitude, latitude)
+            except:
+                self.remove_layer_by_name(points_layer_name)
+                self.points_layer = QgsVectorLayer(
+                    "Point?crs=epsg:4326&index=yes",
+                    points_layer_name, "memory"
+                )
+                symbol = QgsSymbol.defaultSymbol(QgsWkbTypes.PointGeometry)
+                symbol.deleteSymbolLayer(0)
+                symbol.appendSymbolLayer(QgsRasterMarkerSymbolLayer(self.points_layer_icon_path))
+                symbol.setSize(points_layer_icon_size)
+                self.points_layer.setRenderer(QgsSingleSymbolRenderer(symbol))
+                self.points_layer.triggerRepaint()
+                QgsProject.instance().addMapLayer(self.points_layer)
+                self.points_layer_data_provider = self.points_layer.dataProvider()
+                self.set_draw_point(longitude, latitude)
 
     def initListCoverages(self):
         self.dlg.coverage_selection.clear()
         self.dlg.coverage_selection.addItems(self.wcpms_controls.listProducts())
         self.dlg.coverage_selection.activated.connect(self.selectAtributtes)
+        self.selectAtributtes()
+        self.checkFilters()
 
     def selectAtributtes(self):
         description = self.wcpms_controls.productDescription(
@@ -200,26 +326,47 @@ class WCPMS:
         bands = description.get("attributes", {})
         self.bands_dict = {}
         for band in bands:
-            self.bands_dict[f'{band.get('common_name')}:{band.get('name')}'] = band.get('name')
+            self.bands_dict[f'{band.get('common_name')} ({band.get('name')})'] = band.get('name')
         self.dlg.bands_selection.clear()
         self.dlg.bands_selection.addItems(self.bands_dict.keys())
+        self.checkFilters()
 
     def initDates(self):
         """Get the start and end dates of the trajectory."""
-        self.dlg.start_date.setDate(self.basic_controls.formatForQDate("2000-01-01"))
-        self.dlg.end_date.setDate(self.basic_controls.getNowFormatQDate())
+        date_now = self.basic_controls.getNowDateString()
+        year_past = int(date_now[:4]) - 1
+        self.dlg.start_date.setDate(self.basic_controls.formatQDate(f"{year_past}-01-01"))
+        self.dlg.end_date.setDate(self.basic_controls.formatQDate(date_now))
 
     def initButtons(self):
         self.dlg.search.clicked.connect(self.openPlotly)
 
     def initParameters(self):
+        self.checkFilters()
         self.collection = self.dlg.coverage_selection.currentText()
         self.band = self.bands_dict.get(self.dlg.bands_selection.currentText(), '')
         self.start_date = str(self.dlg.start_date.date().toString('yyyy-MM-dd'))
         self.end_date = str(self.dlg.end_date.date().toString('yyyy-MM-dd'))
         self.freq = "16D"
-        self.longitude = "-45.75531005859376"
-        self.latitude = "-11.749226797741814"
+        self.longitude = str(self.dlg.input_longitude.value())
+        self.latitude = str(self.dlg.input_latitude.value())
+
+    def checkFilters(self):
+        """Check if lat lng are selected."""
+        try:
+            if (str(self.dlg.coverage_selection.currentText()) != '' and
+                    self.bands_dict.get(self.dlg.bands_selection.currentText(), '') != '' and
+                        self.dlg.input_longitude.value() != 0 and
+                            self.dlg.input_latitude.value() != 0):
+                self.enabledSearchButtons(True)
+            else:
+                self.enabledSearchButtons(False)
+        except:
+            self.enabledSearchButtons(False)
+
+    def enabledSearchButtons(self, enable):
+        """Enable the buttons to load time series."""
+        self.dlg.search.setEnabled(enable)
 
     def openPlotly(self):
         self.initParameters()
@@ -233,6 +380,12 @@ class WCPMS:
             latitude = self.latitude
         )
         webbrowser.open(url, new=0, autoraise=True)
+
+    def finish_session(self):
+        """Methods to finish when dialog close"""
+        #
+        # Remove mouse click
+        self.addCanvasControlPoint(False)
 
     def run(self):
         """Run method that performs all the real work"""
@@ -248,5 +401,7 @@ class WCPMS:
             self.initButtons()
             # show the dialog
             self.dlg.show()
+            # Methods to finish session
+            self.dlg.finished.connect(self.finish_session)
         except Exception as e:
             raise
