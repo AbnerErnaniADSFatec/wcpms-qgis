@@ -25,7 +25,7 @@
    <property name="title">
     <string>Collections</string>
    </property>
-   <widget class="QComboBox" name="comboBox">
+   <widget class="QComboBox" name="coverage_selection">
     <property name="geometry">
      <rect>
       <x>15</x>
@@ -48,27 +48,14 @@
    <property name="title">
     <string>Band</string>
    </property>
-   <widget class="QComboBox" name="comboBox_2">
+   <widget class="QComboBox" name="bands_selection">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>15</x>
       <y>40</y>
-      <width>280</width>
+      <width>321</width>
       <height>25</height>
      </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton">
-    <property name="geometry">
-     <rect>
-      <x>300</x>
-      <y>40</y>
-      <width>35</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
     </property>
    </widget>
   </widget>
@@ -84,7 +71,7 @@
    <property name="title">
     <string>Start Date:</string>
    </property>
-   <widget class="QDateEdit" name="dateEdit">
+   <widget class="QDateEdit" name="start_date">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -92,6 +79,9 @@
       <width>150</width>
       <height>26</height>
      </rect>
+    </property>
+    <property name="displayFormat">
+     <string>yyyy/MM/dd</string>
     </property>
    </widget>
   </widget>
@@ -107,7 +97,7 @@
    <property name="title">
     <string>End Date:</string>
    </property>
-   <widget class="QDateEdit" name="dateEdit_2">
+   <widget class="QDateEdit" name="end_date">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -115,6 +105,9 @@
       <width>150</width>
       <height>26</height>
      </rect>
+    </property>
+    <property name="displayFormat">
+     <string>yyyy/MM/dd</string>
     </property>
    </widget>
   </widget>
@@ -130,41 +123,65 @@
    <property name="title">
     <string>Longitude / Latitude</string>
    </property>
-   <widget class="QDoubleSpinBox" name="doubleSpinBox">
+   <widget class="QPushButton" name="zoom_selected_point">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>310</x>
       <y>40</y>
-      <width>135</width>
-      <height>26</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QDoubleSpinBox" name="doubleSpinBox_2">
-    <property name="geometry">
-     <rect>
-      <x>155</x>
-      <y>40</y>
-      <width>135</width>
-      <height>26</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_2">
-    <property name="geometry">
-     <rect>
-      <x>300</x>
-      <y>40</y>
-      <width>35</width>
-      <height>25</height>
+      <width>31</width>
+      <height>28</height>
      </rect>
     </property>
     <property name="text">
      <string/>
     </property>
    </widget>
+   <widget class="QDoubleSpinBox" name="input_longitude">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>40</y>
+      <width>131</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="decimals">
+     <number>10</number>
+    </property>
+    <property name="minimum">
+     <double>-180.000000000000000</double>
+    </property>
+    <property name="maximum">
+     <double>180.000000000000000</double>
+    </property>
+    <property name="singleStep">
+     <double>0.000001000000000</double>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="input_latitude">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>40</y>
+      <width>131</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="decimals">
+     <number>10</number>
+    </property>
+    <property name="minimum">
+     <double>-90.000000000000000</double>
+    </property>
+    <property name="maximum">
+     <double>90.000000000000000</double>
+    </property>
+    <property name="value">
+     <double>0.000000000000000</double>
+    </property>
+   </widget>
   </widget>
-  <widget class="QPushButton" name="pushButton_3">
+  <widget class="QPushButton" name="search">
    <property name="geometry">
     <rect>
      <x>60</x>

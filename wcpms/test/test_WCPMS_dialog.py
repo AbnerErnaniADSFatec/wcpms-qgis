@@ -14,11 +14,11 @@ __copyright__ = 'Copyright 2025, INPE'
 
 import unittest
 
-from qgis.PyQt.QtGui import QDialogButtonBox, QDialog
+from qgis.PyQt.QtGui import QDialog, QDialogButtonBox
+from utilities import get_qgis_app
 
 from WCPMS_dialog import WCPMSDialog
 
-from utilities import get_qgis_app
 QGIS_APP = get_qgis_app()
 
 
