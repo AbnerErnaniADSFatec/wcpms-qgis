@@ -329,6 +329,10 @@ class WCPMS:
             self.bands_dict[f'{band.get('common_name')} ({band.get('name')})'] = band.get('name')
         self.dlg.bands_selection.clear()
         self.dlg.bands_selection.addItems(self.bands_dict.keys())
+        find_ndvi = [(i if 'ndvi' in str(bands[i]).lower() else None) for i in range(len(bands))]
+        find_ndvi = list(filter(lambda item: item != None, find_ndvi))
+        if len(find_ndvi):
+            self.dlg.bands_selection.setCurrentText(list(self.bands_dict.keys())[find_ndvi[0]])
         self.checkFilters()
 
     def initDates(self):
