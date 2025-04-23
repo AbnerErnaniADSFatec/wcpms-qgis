@@ -292,7 +292,7 @@ class WCPMS:
         self.getLayers()
         if len(self.layers) > 0:
             self.setCRS()
-            points_layer_name = "wtss_coordinates_history"
+            points_layer_name = "wcpms_coordinates_history"
             points_layer_icon_size = 10
             try:
                 self.set_draw_point(longitude, latitude)
