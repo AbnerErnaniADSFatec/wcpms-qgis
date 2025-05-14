@@ -292,7 +292,7 @@ class WCPMS:
         self.getLayers()
         if len(self.layers) > 0:
             self.setCRS()
-            points_layer_name = "wtss_coordinates_history"
+            points_layer_name = "wcpms_coordinates_history"
             points_layer_icon_size = 10
             try:
                 self.set_draw_point(longitude, latitude)
@@ -329,6 +329,10 @@ class WCPMS:
             self.bands_dict[f'{band.get('common_name')} ({band.get('name')})'] = band.get('name')
         self.dlg.bands_selection.clear()
         self.dlg.bands_selection.addItems(self.bands_dict.keys())
+        find_ndvi = [(i if 'ndvi' in str(bands[i]).lower() else None) for i in range(len(bands))]
+        find_ndvi = list(filter(lambda item: item != None, find_ndvi))
+        if len(find_ndvi):
+            self.dlg.bands_selection.setCurrentText(list(self.bands_dict.keys())[find_ndvi[0]])
         self.checkFilters()
 
     def initDates(self):
