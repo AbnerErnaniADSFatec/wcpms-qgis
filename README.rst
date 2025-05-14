@@ -67,9 +67,9 @@ The plugin WTSS for QGIS is based on the Python programming language with the Py
 Installation
 ------------
 
-See `Development Installation <./wtss_plugin/help/source/dev_install.rst>`_.
+See `Development Installation <./wcpms/help/source/dev_install.rst>`_.
 
-See `User Installation <./wtss_plugin/help/source/user_install.rst>`_.
+See `User Installation <./wcpms/help/source/user_install.rst>`_.
 
 Changes
 -------
