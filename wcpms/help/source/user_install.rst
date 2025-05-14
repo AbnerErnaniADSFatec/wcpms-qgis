@@ -29,8 +29,6 @@ After download this file, start your QGIS and go to ``Plugins >> Manage and Inst
     :alt: Install from zip
 
 
-...
-
 
 .. note::
 
