@@ -36,7 +36,7 @@ from qgis.core import (QgsCoordinateReferenceSystem, QgsFeature, QgsPoint,
                        QgsSingleSymbolRenderer, QgsSymbol, QgsVectorLayer,
                        QgsWkbTypes)
 
-from .controller.config import Config
+from .config import Config
 from .controller.wcpms_qgis_controller import Controls, WCPMS_Controls
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -323,12 +323,13 @@ class WCPMS:
         description = self.wcpms_controls.productDescription(
             str(self.dlg.coverage_selection.currentText())
         )
-        bands = description.get("attributes", {})
+        bands = description.attributes
         self.bands_dict = {}
         for band in bands:
             self.bands_dict[f'{band.get('common_name')} ({band.get('name')})'] = band.get('name')
         self.dlg.bands_selection.clear()
         self.dlg.bands_selection.addItems(self.bands_dict.keys())
+        print(self.bands_dict.keys())
         find_ndvi = [(i if 'ndvi' in str(bands[i]).lower() else None) for i in range(len(bands))]
         find_ndvi = list(filter(lambda item: item != None, find_ndvi))
         if len(find_ndvi):

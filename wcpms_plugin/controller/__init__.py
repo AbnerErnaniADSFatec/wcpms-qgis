@@ -21,5 +21,4 @@
  *                                                                         *
  ***************************************************************************/
 """
-from .config import Config
 from .wcpms_qgis_controller import Controls, WCPMS_Controls

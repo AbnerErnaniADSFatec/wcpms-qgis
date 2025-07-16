@@ -30,7 +30,7 @@ from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QMessageBox
 from wtss import *
 
-from .config import Config
+from ..config import Config
 
 
 class Controls:

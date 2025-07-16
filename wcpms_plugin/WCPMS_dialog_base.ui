@@ -81,7 +81,7 @@
      </rect>
     </property>
     <property name="displayFormat">
-     <string>yyyy/MM/dd</string>
+     <string>dd/MM/yyyy</string>
     </property>
    </widget>
   </widget>
@@ -107,7 +107,7 @@
      </rect>
     </property>
     <property name="displayFormat">
-     <string>yyyy/MM/dd</string>
+     <string>dd/MM/yyyy</string>
     </property>
    </widget>
   </widget>

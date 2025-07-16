@@ -42,7 +42,7 @@ category = plugins, web
 # Tags are comma separated with spaces allowed
 tags = web, stac, raster, cog, timeseries, agriculture, analysis, statistics
 
-icon = ./controller/assets/icon.png
+icon = ./assets/icon.png
 experimental = False
 hasProcessingProvider = no
 
