@@ -78,7 +78,7 @@ class Controls:
 class WCPMS_Controls:
 
     def __init__(self):
-        """Build controls for WTSS Servers."""
+        """Build controls for WCPMS Servers."""
         self.wcpms_host = Config.WCPMS_HOST
         self.wcpms_html = str(Path(Config.BASE_DIR) / 'assets' / 'html' / 'wcpms.html')
         self.wtss = WTSS(Config.WTSS_HOST)
