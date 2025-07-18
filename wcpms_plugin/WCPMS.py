@@ -22,19 +22,19 @@
  ***************************************************************************/
 """
 import os.path
-import webbrowser
+import time
+from datetime import datetime
 from pathlib import Path
 
-import time
-
-from qgis.PyQt.QtCore import QCoreApplication, QSettings, Qt, QTranslator
-from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
-from qgis.gui import QgsMapToolEmitPoint, QgsMapToolPan
+import qgis
 from qgis.core import (QgsCoordinateReferenceSystem, QgsFeature, QgsPoint,
                        QgsProject, QgsRasterMarkerSymbolLayer, QgsRectangle,
                        QgsSingleSymbolRenderer, QgsSymbol, QgsVectorLayer,
                        QgsWkbTypes)
+from qgis.gui import QgsMapToolEmitPoint, QgsMapToolPan
+from qgis.PyQt.QtCore import QCoreApplication, QSettings, Qt, QTranslator
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QAction
 
 from .config import Config
 from .controller.wcpms_qgis_controller import Controls, WCPMS_Controls
@@ -323,25 +323,35 @@ class WCPMS:
         description = self.wcpms_controls.productDescription(
             str(self.dlg.coverage_selection.currentText())
         )
+        timeline = description.get("timeline", [])
+        timeline = sorted(
+            description.get("timeline",[]),
+            key = lambda x:
+                datetime.strptime(x, '%Y-%m-%d')
+        )
         bands = description.attributes
         self.bands_dict = {}
         for band in bands:
             self.bands_dict[f'{band.get('common_name')} ({band.get('name')})'] = band.get('name')
         self.dlg.bands_selection.clear()
         self.dlg.bands_selection.addItems(self.bands_dict.keys())
-        print(self.bands_dict.keys())
+        self.setFilterDates(timeline)
+        self.selectNDVI(bands)
+        self.checkFilters()
+
+    def selectNDVI(self, bands):
+        """Find the NDVI in attributes."""
         find_ndvi = [(i if 'ndvi' in str(bands[i]).lower() else None) for i in range(len(bands))]
         find_ndvi = list(filter(lambda item: item != None, find_ndvi))
         if len(find_ndvi):
             self.dlg.bands_selection.setCurrentText(list(self.bands_dict.keys())[find_ndvi[0]])
-        self.checkFilters()
 
-    def initDates(self):
+    def setFilterDates(self, timeline):
         """Get the start and end dates of the trajectory."""
-        date_now = self.basic_controls.getNowDateString()
-        year_past = int(date_now[:4]) - 1
-        self.dlg.start_date.setDate(self.basic_controls.formatQDate(f"{year_past}-01-01"))
-        self.dlg.end_date.setDate(self.basic_controls.formatQDate(date_now))
+        latest_date_year = timeline[len(timeline) - 1][:4]
+        latest_date_past_year = int(latest_date_year) - 1
+        self.dlg.start_date.setDate(self.basic_controls.formatQDate(f'{latest_date_past_year}-01-01'))
+        self.dlg.end_date.setDate(self.basic_controls.formatQDate(f'{latest_date_year}-01-01'))
 
     def initButtons(self):
         self.dlg.search.clicked.connect(self.openPlotly)
@@ -375,7 +385,17 @@ class WCPMS:
 
     def openPlotly(self):
         self.initParameters()
-        url = self.wcpms_controls.getPhenometricsUrl(
+        # url = self.wcpms_controls.getPhenometricsUrl(
+        #     collection = self.collection,
+        #     band = self.band,
+        #     start_date = self.start_date,
+        #     end_date = self.end_date,
+        #     freq = self.freq,
+        #     longitude = self.longitude,
+        #     latitude = self.latitude
+        # )
+        # webbrowser.open(url, new=0, autoraise=True)
+        self.wcpms_controls.getPhenometricsPlot(
             collection = self.collection,
             band = self.band,
             start_date = self.start_date,
@@ -384,7 +404,6 @@ class WCPMS:
             longitude = self.longitude,
             latitude = self.latitude
         )
-        webbrowser.open(url, new=0, autoraise=True)
 
     def finish_session(self):
         """Methods to finish when dialog close"""
@@ -392,21 +411,29 @@ class WCPMS:
         # Remove mouse click
         self.addCanvasControlPoint(False)
 
+    def dialogShow(self):
+        """Rules to start dialog."""
+        wcpms_qgis = qgis.utils.plugins.get("wcpms_plugin", None)
+        if wcpms_qgis:
+            wcpms_qgis.dlg.show()
+        else:
+            self.dlg.show()
+
     def run(self):
         """Run method that performs all the real work"""
         try:
             # Create the dialog with elements (after translation) and keep reference
             # Only create GUI ONCE in callback, so that it will only load when the plugin is started
-            if self.first_start == True:
-                self.first_start = False
-                self.dlg = WCPMSDialog()
+            self.dlg = WCPMSDialog()
             self.initControls()
             self.initListCoverages()
-            self.initDates()
             self.initButtons()
             # show the dialog
-            self.dlg.show()
+            self.dialogShow()
             # Methods to finish session
             self.dlg.finished.connect(self.finish_session)
         except Exception as e:
-            raise
+            # Exception raises error message and closes dialog
+            controls = Controls()
+            controls.alert("error", "Error while starting plugin!", str(e))
+            self.dlg.close()

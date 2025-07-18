@@ -25,12 +25,16 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 import requests
 from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QMessageBox
 from wtss import *
 
 from ..config import Config
+from .wcpms_client import (cube_query, get_phenometrics,
+                           plot_phenometrics)
 
 
 class Controls:
@@ -105,3 +109,26 @@ class WCPMS_Controls:
             f'&latitude={latitude}'
         )
         return request_url
+
+    def getPhenometricsPlot(self, collection, band, start_date, end_date, freq, longitude, latitude):
+        datacube = cube_query(
+            collection = collection,
+            start_date = start_date,
+            end_date = end_date,
+            freq = freq,
+            band = band
+        )
+        phenometrics = get_phenometrics(
+            url = Config.WCPMS_HOST,
+            cube = datacube,
+            latitude = latitude,
+            longitude = longitude
+        )
+        default_image = f'{Config.BASE_DIR}/wcpms_plotly.png'
+        fig = plot_phenometrics(datacube, phenometrics)
+        fig.write_image(default_image)
+        img = mpimg.imread(default_image)
+        plt.figure(figsize = (12, 4))
+        plt.imshow(img)
+        plt.axis('off')
+        plt.show()

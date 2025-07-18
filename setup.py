@@ -64,6 +64,7 @@ install_requires = [
     'pandas>=2',
     'jsonschema>=3.2',
     'pystac-client>=0.8.3',
+    'kaleido<1.0.0',
     'wtss==2.0.0a3'
 ]
 
