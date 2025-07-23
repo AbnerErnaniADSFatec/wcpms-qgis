@@ -22,19 +22,19 @@
  ***************************************************************************/
 """
 import json
+import webbrowser
 from datetime import datetime
 from pathlib import Path
 
-import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
 import requests
 from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QMessageBox
 from wtss import *
 
 from ..config import Config
-from .wcpms_client import (cube_query, get_phenometrics,
-                           plot_phenometrics)
+from .wcpms_client import (cube_query, get_phenometrics, plot_phenometrics,
+                           plot_phenometrics_matplotlib,
+                           plot_phenometrics_seaborn)
 
 
 class Controls:
@@ -97,38 +97,36 @@ class WCPMS_Controls:
         """Return a dictionary with product description."""
         return self.wtss[product]
 
-    def getPhenometricsUrl(self, collection, band, start_date, end_date, freq, longitude, latitude):
-        request_url = (
-            f'file://{self.wcpms_html}' +
-            f'?collection={collection}'
-            f'&band={band}' +
-            f'&start_date={start_date}' +
-            f'&end_date={end_date}' +
-            f'&freq={freq}' +
-            f'&longitude={longitude}' +
-            f'&latitude={latitude}'
-        )
-        return request_url
-
-    def getPhenometricsPlot(self, collection, band, start_date, end_date, freq, longitude, latitude):
-        datacube = cube_query(
-            collection = collection,
-            start_date = start_date,
-            end_date = end_date,
-            freq = freq,
-            band = band
-        )
-        phenometrics = get_phenometrics(
-            url = Config.WCPMS_HOST,
-            cube = datacube,
-            latitude = latitude,
-            longitude = longitude
-        )
-        default_image = f'{Config.BASE_DIR}/wcpms_plotly.png'
-        fig = plot_phenometrics(datacube, phenometrics)
-        fig.write_image(default_image)
-        img = mpimg.imread(default_image)
-        plt.figure(figsize = (12, 4))
-        plt.imshow(img)
-        plt.axis('off')
-        plt.show()
+    def getPhenometricsPlot(self, collection, band, start_date, end_date, freq, longitude, latitude, opt = "seaborn"):
+        if opt == "browser":
+            request_url = (
+                f'file://{self.wcpms_html}' +
+                f'?collection={collection}'
+                f'&band={band}' +
+                f'&start_date={start_date}' +
+                f'&end_date={end_date}' +
+                f'&freq={freq}' +
+                f'&longitude={longitude}' +
+                f'&latitude={latitude}'
+            )
+            webbrowser.open(request_url, new=0, autoraise=True)
+        else:
+            datacube = cube_query(
+                collection = collection,
+                start_date = start_date,
+                end_date = end_date,
+                freq = freq,
+                band = band
+            )
+            phenometrics = get_phenometrics(
+                url = Config.WCPMS_HOST,
+                cube = datacube,
+                latitude = latitude,
+                longitude = longitude
+            )
+            if opt == "plotly":
+                plot_phenometrics(datacube, phenometrics)
+            elif opt == "matplotlib":
+                plot_phenometrics_matplotlib(datacube, phenometrics, attr = [collection, band])
+            elif opt == "seaborn":
+                plot_phenometrics_seaborn(datacube, phenometrics, attr = [collection, band])

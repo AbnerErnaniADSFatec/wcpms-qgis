@@ -26,8 +26,12 @@ from datetime import datetime as dt
 from datetime import timedelta
 
 import geopandas as gpd
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import pandas as pd
 import plotly.graph_objects as go
 import requests
+import seaborn as sns
 from scipy.signal import savgol_filter
 
 warnings.filterwarnings("ignore")
@@ -161,7 +165,7 @@ def smooth_timeseries(ts, method='savitsky', window_length=3, polyorder=1):
         smooth_ts = savgol_filter(x=ts, window_length=window_length, polyorder=polyorder)
     return smooth_ts
 
-def plot_phenometrics(cube, ds_phenos, layout = (500, 1200)):
+def plot_phenometrics(cube, ds_phenos):
 
     y_new = smooth_timeseries(ts=ds_phenos['timeseries']['values'], method='savitsky', window_length=3)
 
@@ -175,12 +179,7 @@ def plot_phenometrics(cube, ds_phenos, layout = (500, 1200)):
     pos_t_minus = pos_t_minus - timedelta(days=5)
     pos_t_plus = pos_t_plus + timedelta(days=5)
 
-    fig = go.Figure(
-        layout = go.Layout(
-            height = layout[0],
-            width = layout[1]
-        )
-    )
+    fig = go.Figure()
 
     fig.add_trace(go.Scatter(
         name='LIOS',
@@ -257,7 +256,137 @@ def plot_phenometrics(cube, ds_phenos, layout = (500, 1200)):
         marker=dict(color='#e35400', size=12, line=dict(color='#000000', width=2 ) )
     ))
 
-    return fig
+    fig.show()
+
+def plot_phenometrics_matplotlib(cube, ds_phenos, layout = (12, 6), attr = {}):
+    y_new = smooth_timeseries(ts=ds_phenos['timeseries']['values'], method='savitsky', window_length=3)
+
+    timeline_str = ds_phenos['timeseries']['timeline']
+    timeline = [dt.strptime(t.split('T')[0], "%Y-%m-%d") for t in timeline_str]
+    timeseries = ds_phenos['timeseries']['values']
+    phenometrics = ds_phenos['phenometrics']
+
+    sos_t = dt.strptime(phenometrics['sos_t'].split('T')[0], "%Y-%m-%d")
+    pos_t = dt.strptime(phenometrics['pos_t'].split('T')[0], "%Y-%m-%d")
+    eos_t = dt.strptime(phenometrics['eos_t'].split('T')[0], "%Y-%m-%d")
+    vos_t = dt.strptime(phenometrics['vos_t'].split('T')[0], "%Y-%m-%d")
+
+    sos_v = phenometrics["sos_v"]
+    pos_v = phenometrics["pos_v"]
+    eos_v = phenometrics["eos_v"]
+    vos_v = phenometrics["vos_v"]
+
+    fig, ax = plt.subplots(figsize = layout) # convert from pixels to inches
+
+    # Fill LIOS region
+    lios_dates = [sos_t, sos_t, pos_t, eos_t, eos_t]
+    lios_values = [0, sos_v, pos_v, eos_v, 0]
+    ax.fill(lios_dates, lios_values, color='skyblue', alpha=0.4, label='LIOS')
+
+    # Raw time series
+    ax.plot(timeline, timeseries, label=cube['band'], color='#17BECF')
+
+    # Smoothed time series
+    ax.plot(timeline, y_new, label=f"Smooth {cube['band']}", color='#ff0000')
+
+    # LOS line
+    ax.plot([sos_t, eos_t], [sos_v, eos_v], linestyle='dashdot', color='black', label='LOS')
+
+    # AOS line (vertical)
+    ax.plot([pos_t, pos_t], [pos_v, 0], linestyle='dashdot', color='black', label='AOS')
+
+    # SOS point
+    ax.plot(sos_t, sos_v, 'o', label='SOS', color='#008c00', markersize=10, markeredgecolor='black', markeredgewidth=2)
+
+    # POS point
+    ax.plot(pos_t, pos_v, 'o', label='POS', color='#0009e3', markersize=10, markeredgecolor='black', markeredgewidth=2)
+
+    # EOS point
+    ax.plot(eos_t, eos_v, 'o', label='EOS', color='#8a6100', markersize=10, markeredgecolor='black', markeredgewidth=2)
+
+    # VOS point
+    ax.plot(vos_t, vos_v, 'o', label='VOS', color='#e35400', markersize=10, markeredgecolor='black', markeredgewidth=2)
+
+    # Format x-axis
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+    fig.autofmt_xdate()
+
+    ax.set_title(("\nPhenological Metrics for\n{} ({})\n").format(*attr))
+    plt.xlabel(None)
+    plt.ylabel(None)
+    ax.legend(loc='upper right')
+
+    plt.tight_layout()
+    plt.show()
+
+def plot_phenometrics_seaborn(cube, ds_phenos, layout=(12, 4), attr={}):
+    # Smooth time series
+    y_new = smooth_timeseries(ts=ds_phenos['timeseries']['values'], method='savitsky', window_length=3)
+
+    # Prepare timeline and values
+    timeline_str = ds_phenos['timeseries']['timeline']
+    timeline = [dt.strptime(t.split('T')[0], "%Y-%m-%d") for t in timeline_str]
+    timeseries = ds_phenos['timeseries']['values']
+    phenometrics = ds_phenos['phenometrics']
+
+    # Key phenology dates
+    sos_t = dt.strptime(phenometrics['sos_t'].split('T')[0], "%Y-%m-%d")
+    pos_t = dt.strptime(phenometrics['pos_t'].split('T')[0], "%Y-%m-%d")
+    eos_t = dt.strptime(phenometrics['eos_t'].split('T')[0], "%Y-%m-%d")
+    vos_t = dt.strptime(phenometrics['vos_t'].split('T')[0], "%Y-%m-%d")
+
+    sos_v = phenometrics["sos_v"]
+    pos_v = phenometrics["pos_v"]
+    eos_v = phenometrics["eos_v"]
+    vos_v = phenometrics["vos_v"]
+
+    # Prepare DataFrame for Seaborn
+    df = pd.DataFrame({
+        'Date': timeline,
+        'Raw': timeseries,
+        'Smoothed': y_new
+    })
+
+    plt.figure(figsize=layout)
+    ax = plt.gca()
+
+    # Fill LIOS region (custom Matplotlib)
+    lios_dates = [sos_t, sos_t, pos_t, eos_t, eos_t]
+    lios_values = [0, sos_v, pos_v, eos_v, 0]
+    ax.fill(lios_dates, lios_values, color='skyblue', alpha=0.4, label='LIOS')
+
+    # Plot raw and smoothed lines
+    sns.lineplot(data=df, x='Date', y='Raw', label=cube['band'], ax=ax, color='#17BECF')
+    sns.lineplot(data=df, x='Date', y='Smoothed', label=f"Smooth {cube['band']}", ax=ax, color='#ff0000')
+
+    # LOS line
+    ax.plot([sos_t, eos_t], [sos_v, eos_v], linestyle='dashdot', color='black', label='LOS')
+
+    # AOS line (vertical)
+    ax.plot([pos_t, pos_t], [0, pos_v], linestyle='dashdot', color='black', label='AOS')
+
+    # Plot phenology points (using Seaborn's scatter)
+    sns.scatterplot(x=[sos_t], y=[sos_v], ax=ax, label='SOS',
+                    color='#008c00', s=100, edgecolor='black', zorder=5)
+    sns.scatterplot(x=[pos_t], y=[pos_v], ax=ax, label='POS',
+                    color='#0009e3', s=100, edgecolor='black', zorder=5)
+    sns.scatterplot(x=[eos_t], y=[eos_v], ax=ax, label='EOS',
+                    color='#8a6100', s=100, edgecolor='black', zorder=5)
+    sns.scatterplot(x=[vos_t], y=[vos_v], ax=ax, label='VOS',
+                    color='#e35400', s=100, edgecolor='black', zorder=5)
+
+    # Formatting
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+
+    plt.xticks(rotation=30)
+
+    ax.set_title(("Phenological Metrics for {} ({})\n").format(*attr))
+    ax.set_xlabel('')
+    ax.set_ylabel('')
+    ax.legend(loc='upper right')
+
+    plt.tight_layout()
+    plt.show()
 
 def plot_advanced_phenometrics(cube, ds_phenos):
 

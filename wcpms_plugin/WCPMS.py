@@ -198,6 +198,8 @@ class WCPMS:
         self.wcpms_controls = WCPMS_Controls()
         self.basic_controls = Controls()
         self.enabled_click = True
+        self.dlg.input_longitude.valueChanged.connect(self.checkFilters)
+        self.dlg.input_latitude.valueChanged.connect(self.checkFilters)
         self.addCanvasControlPoint(self.enabled_click)
         self.dlg.zoom_selected_point.clicked.connect(self.zoom_to_selected_point)
         self.dlg.zoom_selected_point.setEnabled(True)
@@ -348,13 +350,12 @@ class WCPMS:
 
     def setFilterDates(self, timeline):
         """Get the start and end dates of the trajectory."""
-        latest_date_year = timeline[len(timeline) - 1][:4]
-        latest_date_past_year = int(latest_date_year) - 1
-        self.dlg.start_date.setDate(self.basic_controls.formatQDate(f'{latest_date_past_year}-01-01'))
-        self.dlg.end_date.setDate(self.basic_controls.formatQDate(f'{latest_date_year}-01-01'))
+        latest_year = timeline[len(timeline) - 1][:4]
+        self.dlg.start_date.setDate(self.basic_controls.formatQDate(f'{latest_year}-01-01'))
+        self.dlg.end_date.setDate(self.basic_controls.formatQDate(f'{latest_year}-12-31'))
 
     def initButtons(self):
-        self.dlg.search.clicked.connect(self.openPlotly)
+        self.dlg.search.clicked.connect(self.openPlot)
 
     def initParameters(self):
         self.checkFilters()
@@ -383,18 +384,8 @@ class WCPMS:
         """Enable the buttons to load time series."""
         self.dlg.search.setEnabled(enable)
 
-    def openPlotly(self):
+    def openPlot(self):
         self.initParameters()
-        # url = self.wcpms_controls.getPhenometricsUrl(
-        #     collection = self.collection,
-        #     band = self.band,
-        #     start_date = self.start_date,
-        #     end_date = self.end_date,
-        #     freq = self.freq,
-        #     longitude = self.longitude,
-        #     latitude = self.latitude
-        # )
-        # webbrowser.open(url, new=0, autoraise=True)
         self.wcpms_controls.getPhenometricsPlot(
             collection = self.collection,
             band = self.band,
@@ -402,7 +393,8 @@ class WCPMS:
             end_date = self.end_date,
             freq = self.freq,
             longitude = self.longitude,
-            latitude = self.latitude
+            latitude = self.latitude,
+            opt = Config.WCPMS_PLOT_OPTION
         )
 
     def finish_session(self):

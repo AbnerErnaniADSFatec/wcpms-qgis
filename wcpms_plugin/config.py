@@ -35,3 +35,6 @@ class Config:
     WTSS_HOST = os.getenv("WTSS_HOST", "https://data.inpe.br/bdc/wtss/v4/")
 
     WCPMS_HOST = os.getenv("WCPMS_HOST", "https://data.inpe.br/bdc/wcpms/")
+
+    # Available options browser, plotly, matplotlib & seaborn
+    WCPMS_PLOT_OPTION = os.getenv("WCPMS_PLOT_OPTION", "seaborn")
