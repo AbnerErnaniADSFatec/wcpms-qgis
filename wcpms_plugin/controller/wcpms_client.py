@@ -314,7 +314,11 @@ def plot_phenometrics_matplotlib(cube, ds_phenos, layout = (12, 6), attr = {}):
     ax.set_title(("\nPhenological Metrics for\n{} ({})\n").format(*attr))
     plt.xlabel(None)
     plt.ylabel(None)
-    ax.legend(loc='upper right')
+    ax.legend(
+        bbox_to_anchor=(1.01, 1),
+        loc='upper left',
+        borderaxespad=0
+    )
 
     plt.tight_layout()
     plt.show()
@@ -383,7 +387,11 @@ def plot_phenometrics_seaborn(cube, ds_phenos, layout=(12, 4), attr={}):
     ax.set_title(("Phenological Metrics for {} ({})\n").format(*attr))
     ax.set_xlabel('')
     ax.set_ylabel('')
-    ax.legend(loc='upper right')
+    ax.legend(
+        bbox_to_anchor=(1.01, 1),
+        loc='upper left',
+        borderaxespad=0
+    )
 
     plt.tight_layout()
     plt.show()

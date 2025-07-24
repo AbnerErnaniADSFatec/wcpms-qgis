@@ -314,16 +314,22 @@ class WCPMS:
                 self.points_layer_data_provider = self.points_layer.dataProvider()
                 self.set_draw_point(longitude, latitude)
 
+    def getSelectedCoverage(self):
+        return self.products[str(self.dlg.coverage_selection.currentText())]
+
     def initListCoverages(self):
+        """Fill the blank spaces with coverage metadata for selection."""
+        self.products = self.wcpms_controls.listProducts()
         self.dlg.coverage_selection.clear()
-        self.dlg.coverage_selection.addItems(self.wcpms_controls.listProducts())
+        self.dlg.coverage_selection.addItems(list(self.products.keys()))
+        self.dlg.coverage_selection.setCurrentIndex(0)
         self.dlg.coverage_selection.activated.connect(self.selectAtributtes)
         self.selectAtributtes()
         self.checkFilters()
 
     def selectAtributtes(self):
         description = self.wcpms_controls.productDescription(
-            str(self.dlg.coverage_selection.currentText())
+            self.getSelectedCoverage()
         )
         timeline = description.get("timeline", [])
         timeline = sorted(
@@ -359,7 +365,7 @@ class WCPMS:
 
     def initParameters(self):
         self.checkFilters()
-        self.collection = self.dlg.coverage_selection.currentText()
+        self.collection = self.getSelectedCoverage()
         self.band = self.bands_dict.get(self.dlg.bands_selection.currentText(), '')
         self.start_date = str(self.dlg.start_date.date().toString('yyyy-MM-dd'))
         self.end_date = str(self.dlg.end_date.date().toString('yyyy-MM-dd'))
@@ -370,7 +376,7 @@ class WCPMS:
     def checkFilters(self):
         """Check if lat lng are selected."""
         try:
-            if (str(self.dlg.coverage_selection.currentText()) != '' and
+            if (self.getSelectedCoverage() != '' and
                     self.bands_dict.get(self.dlg.bands_selection.currentText(), '') != '' and
                         self.dlg.input_longitude.value() != 0 and
                             self.dlg.input_latitude.value() != 0):
@@ -388,6 +394,7 @@ class WCPMS:
         self.initParameters()
         self.wcpms_controls.getPhenometricsPlot(
             collection = self.collection,
+            collection_title = str(self.dlg.coverage_selection.currentText()),
             band = self.band,
             start_date = self.start_date,
             end_date = self.end_date,

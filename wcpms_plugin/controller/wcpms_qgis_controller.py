@@ -89,15 +89,16 @@ class WCPMS_Controls:
 
     def listProducts(self):
         """Return a dictionary with the list of available products."""
-        response = requests.get(f'{Config.WCPMS_HOST}list_collections')
-        products = json.loads(response.content).get('coverages', [])
-        return products
+        coverages_dict = {}
+        for coverage in self.wtss.coverages:
+            coverages_dict[dict(self.wtss[coverage])['title']] = coverage
+        return coverages_dict
 
     def productDescription(self, product):
         """Return a dictionary with product description."""
         return self.wtss[product]
 
-    def getPhenometricsPlot(self, collection, band, start_date, end_date, freq, longitude, latitude, opt = "seaborn"):
+    def getPhenometricsPlot(self, collection, collection_title, band, start_date, end_date, freq, longitude, latitude, opt = "seaborn"):
         if opt == "browser":
             request_url = (
                 f'file://{self.wcpms_html}' +
@@ -127,6 +128,6 @@ class WCPMS_Controls:
             if opt == "plotly":
                 plot_phenometrics(datacube, phenometrics)
             elif opt == "matplotlib":
-                plot_phenometrics_matplotlib(datacube, phenometrics, attr = [collection, band])
+                plot_phenometrics_matplotlib(datacube, phenometrics, attr = [collection_title, band])
             elif opt == "seaborn":
-                plot_phenometrics_seaborn(datacube, phenometrics, attr = [collection, band])
+                plot_phenometrics_seaborn(datacube, phenometrics, attr = [collection_title, band])
