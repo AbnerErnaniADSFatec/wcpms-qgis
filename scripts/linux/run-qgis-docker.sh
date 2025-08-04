@@ -17,16 +17,35 @@
 #
 #!/bin/bash
 
-xhost +
+if [ "$QGIS_RELEASE" = "" ];
+then
+	echo "Using QGIS 3.42..."
+	QGIS_RELEASE=3.42
+fi
 
-docker run --rm \
-	--interactive \
-    --tty \
-	--name qgis-docker-wcpms-plugin \
-	-i -t \
-	-v ${PWD}:/home/wcpms_plugin \
+if [ "$BUILD" = "" ];
+then
+	echo "Building image for WCPMS-QGIS..."
+	python3 ./scripts/build_requirements.py
+	cp ./LICENSE ./wcpms_plugin/LICENSE
+	ls -al
+
+	bash ./scripts/linux/generate-zip.sh
+
+	docker rmi wcpms_qgis/qgis:$QGIS_RELEASE --force
+
+	docker build -t wcpms_qgis/qgis:$QGIS_RELEASE .
+fi
+
+mkdir .qgis/
+
+xhost +local:docker
+
+docker run -it \
+	--rm \
+	-e DISPLAY=$DISPLAY \
 	-v /tmp/.X11-unix:/tmp/.X11-unix \
-	-e DISPLAY=unix$DISPLAY \
-	wcpms-qgis:latest qgis
-
-xhost -
+	-v $PWD/.qgis/:$HOME \
+	-v $PWD:/home/wcpms-qgis \
+	--device /dev/dri \
+	wcpms_qgis/qgis:$QGIS_RELEASE qgis

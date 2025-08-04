@@ -15,25 +15,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
 #
-#!/bin/bash
+# Build image with:
+#
+# docker build -t wcpms_qgis/qgis:3.42 .
+#
 
-if [ "$QGIS_RELEASE" = "" ];
-then
-	echo "Using latest..."
-	QGIS_RELEASE=latest
-fi
+ARG QGIS_RELEASE=3.42
+FROM qgis/qgis:${QGIS_RELEASE}
 
-xhost +
+ADD WCPMS.zip .
 
-docker run --rm \
-	--interactive \
-    --tty \
-	--name qgis-docker \
-	-i -t \
-	-v ${PWD}:/home/wcpms_plugin \
-	-v ${PWD}/plugins:/root/.local/share/QGIS/QGIS3/profiles/default/python/plugins/ \
-	-v /tmp/.X11-unix:/tmp/.X11-unix \
-	-e DISPLAY=unix$DISPLAY \
-	qgis/qgis:$QGIS_RELEASE qgis
+RUN apt-get update && \
+    apt-get install -y unzip
 
-xhost -
+RUN unzip WCPMS.zip -d \
+    /usr/share/qgis/python/plugins/
+
+RUN python3 -m pip install --user -r \
+      /usr/share/qgis/python/plugins/WCPMS/requirements.txt \
+      --break-system-packages
+
+RUN mkdir -p ~/.local/share/QGIS/QGIS3/profiles/default/QGIS
+
+RUN echo -e "\n[PythonPlugins]\nWCPMS=true\n" \
+      >> ~/.local/share/QGIS/QGIS3/profiles/default/QGIS/QGIS3.ini
+
+CMD /bin/bash

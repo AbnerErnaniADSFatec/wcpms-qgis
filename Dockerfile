@@ -16,19 +16,19 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
 #
 
-FROM qgis/qgis:release-3_32
+ARG QGIS_RELEASE=3.42
+FROM qgis/qgis:${QGIS_RELEASE}
 
-COPY . /wcpms-qgis
+COPY ./wcpms_plugin/zip_build/WCPMS \
+      /usr/share/qgis/python/plugins/WCPMS
 
-WORKDIR ./wcpms-qgis
+RUN python3 -m pip install --user -r \
+      /usr/share/qgis/python/plugins/WCPMS/requirements.txt \
+      --break-system-packages
 
-RUN pip3 install --upgrade pip \
-    && pip3 install -e .[all]
+RUN mkdir -p ~/.local/share/QGIS/QGIS3/profiles/default/QGIS
 
-RUN python3 ./scripts/build_requirements.py
+RUN echo -e "\n[PythonPlugins]\nWCPMS=true\n" \
+      >> ~/.local/share/QGIS/QGIS3/profiles/default/QGIS/QGIS3.ini
 
-RUN cd wcpms_plugin \
-    && pb_tool deploy \
-        --plugin_path /root/.local/share/QGIS/QGIS3/profiles/default/python/plugins/ -y
-
-ENTRYPOINT qgis
+CMD /bin/bash
