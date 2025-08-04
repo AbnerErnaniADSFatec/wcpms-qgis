@@ -37,15 +37,12 @@ then
 	docker build -t wcpms_qgis/qgis:$QGIS_RELEASE .
 fi
 
-mkdir .qgis/
-
 xhost +local:docker
 
 docker run -it \
 	--rm \
 	-e DISPLAY=$DISPLAY \
 	-v /tmp/.X11-unix:/tmp/.X11-unix \
-	-v $PWD/.qgis/:$HOME \
 	-v $PWD:/home/wcpms-qgis \
 	--device /dev/dri \
 	wcpms_qgis/qgis:$QGIS_RELEASE qgis
