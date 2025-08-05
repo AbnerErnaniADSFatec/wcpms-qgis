@@ -39,10 +39,12 @@ fi
 
 xhost +local:docker
 
-docker run -it \
-	--rm \
+docker run -it --rm \
 	-e DISPLAY=$DISPLAY \
 	-v /tmp/.X11-unix:/tmp/.X11-unix \
 	-v $PWD:/home/wcpms-qgis \
 	--device /dev/dri \
+	--name wcpms_qgis \
 	wcpms_qgis/qgis:$QGIS_RELEASE qgis
+
+xhost -local:docker
