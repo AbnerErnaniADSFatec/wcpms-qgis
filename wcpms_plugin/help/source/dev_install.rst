@@ -1,6 +1,6 @@
 ..
     This file is part of Python QGIS Plugin for WCPMS.
-    Copyright (C) 2025 INPE.
+    Copyright (C) 2024 INPE.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ If you cloned the repository, you can install the requirements running `pip` in 
 
 Now you will need to generate a `requirements.txt` file for plugin install and resolve dependencies conflicts in background when users get the zip file:
 
-This is because only QGIS does not resolve external dependencies like `wcpms.py <https://github.com/brazil-data-cube/wcpms.py>`_, and to generate the zip file for user installation, the requirements is needed to run installation script in `__init__.py <../wcpms_plugin/__init__.py>`_.
+This is because only QGIS does not resolve external dependencies like `WCPMS.py <https://github.com/brazil-data-cube/wcpms.py>`_, and to generate the zip file for user installation, the requirements is needed to run installation script in `__init__.py <../wcpms_plugin/__init__.py>`_.
 
 To generate this file use this script:
 
@@ -69,7 +69,14 @@ To generate this file use this script:
     $ python3 scripts/build_requirements.py
 
 
-After `requirements.txt`, you will need to compile the `resources.qrc`, then go to the source code folder:
+Move the `LICENSE` to `wcpms_plugin` path:
+
+.. code-block:: text
+
+    $ cp LICENSE wcpms_plugin/
+
+
+After set the `requirements.txt` and `LICENSE` files, you will need to compile the `resources.qrc`, then go to the source code folder:
 
 .. code-block:: text
 
@@ -104,6 +111,11 @@ To generate the zip file for plugin installer, use:
 
 This command will compress the files configured in `pb_tool.cfg <../wcpms_plugin/pb_tool.cfg>`_, any errors may be related to previous steps with the generated files `requirements.txt` and `resources.py`.
 
+.. note::
+
+    To upload the `zip` in `QGIS Plugins Repository <https://plugins.qgis.org/>`_, you need to clean the source code deleting the `__pycache__/` files.
+    Thers is an example to do this step in `generate-zip.sh <./scripts/linux/generate-zip.sh>`_.
+
 Docker
 ------
 
@@ -111,73 +123,66 @@ To run this plugin in a `QGIS Docker <https://hub.docker.com/r/qgis/qgis>`_ inst
 
 There are two ways to run the plugin: building the image for plugin or run the QGIS Docker and install the user zip file.
 
-To build the plugin image you need to run:
+To build the plugin image you need to create a new folder in a different path of source code and create an `Dockerfile` like:
 
 .. code-block:: text
 
-    $ docker build -t wcpms-qgis .
+    ARG QGIS_RELEASE=3.42
+    FROM qgis/qgis:${QGIS_RELEASE}
+
+    ADD wcpms_plugin.zip .
+
+    RUN apt-get update && \
+        apt-get install -y unzip
+
+    RUN unzip wcpms_plugin.zip -d \
+        /usr/share/qgis/python/plugins/
+
+    RUN python3 -m pip install --user -r \
+        /usr/share/qgis/python/plugins/wcpms_plugin/requirements.txt \
+        --break-system-packages
+
+    RUN mkdir -p ~/.local/share/QGIS/QGIS3/profiles/default/QGIS
+
+    RUN echo -e "\n[PythonPlugins]\nwcpms_plugin=true\n" \
+        >> ~/.local/share/QGIS/QGIS3/profiles/default/QGIS/QGIS3.ini
+
+    CMD /bin/bash
 
 
-After build the plugin image, you need to run this script in the root of repository:
+Move the `wcpms_plugin.zip` to this folder with `Dockerfile` and run:
 
 .. code-block:: text
 
-    $ bash scripts/linux/run-qgis-wcpms-plugin.sh
+    $ docker build -t wcpms_qgis/qgis:3.42 .
+
+
+To get the `wcpms_plugin.zip` you can run the `pb_tool zip` command described previously, or download the latest version in `https://github.com/brazil-data-cube/wcpms-qgis/releases <https://github.com/brazil-data-cube/wcpms-qgis/releases>`_.
+
+You can run this image in a container using this command:
+
+.. code-block:: text
+
+    docker run -it --rm \
+        -e DISPLAY=$DISPLAY \
+        -v /tmp/.X11-unix:/tmp/.X11-unix \
+        -v $PWD:/home/wcpms-qgis \
+        --device /dev/dri \
+        --name wcpms_qgis \
+        wcpms_qgis/qgis:3.42 qgis
 
 
 .. note::
 
-    For Windows users, this script is detailed below:
-
-    .. code-block:: text
-
-        docker run --rm \
-            --interactive \
-            --tty \
-            --name qgis-docker-wcpms-plugin \
-            -i -t \
-            -v ${PWD}:/home/wcpms_plugin \
-            -v /tmp/.X11-unix:/tmp/.X11-unix \
-            -e DISPLAY=unix$DISPLAY \
-            wcpms-qgis:latest qgis
-
-
-To run only the QGIS instance and after run the user installation:
-
-.. code-block:: text
-
-    $ QGIS_RELEASE="release-3_28" \
-        bash scripts/linux/run-qgis.sh
-
-
-With the QGIS instance running go to ``Plugins >> Manage and Install Plugins`` and install the plugin via zip, using the generated zip file using ``pb_tool zip`` or any compressing app.
-
-Note that you can choose the release of QGIS, in this example was chosen the `3.28` version.
-
-.. note::
-
-    For Windows users, this script can be adapted from:
-
-    .. code-block:: text
-
-        set OSGEO4W_ROOT=release-3_28
-
-        docker run --rm \
-            --interactive \
-            --tty \
-            --name qgis-docker \
-            -i -t \
-            -v ${PWD}:/home/wcpms_plugin \
-            -v ${PWD}/plugins:/root/.local/share/QGIS/QGIS3/profiles/default/python/plugins/ \
-            -v /tmp/.X11-unix:/tmp/.X11-unix \
-            -e DISPLAY=unix$DISPLAY \
-            qgis/qgis:%OSGEO4W_ROOT% qgis
+    There is an script as example to build and run docker image `run-qgis-docker.sh <../../../scripts/linux/run-qgis-docker.sh>`_.
 
 
 Windows
 -------
 
-The scripts to help to configure the environment variables are located in `Windows CMD <../wcpms-qgis/scripts/win>`_.
+The scripts to help to configure the environment variables are located in `Windows CMD <../../../scripts/win>`_.
+
+Before you run the steps for installation in windows you need to start the `OSGeo4W Shell Software <https://www.osgeo.org/projects/osgeo4w/>`_ to run these commands.
 
 To install the plugin in Windows environment, with a installed version > 3 for QGIS, open the Terminal as administrator and set the environment variables to link `PYTHONHOME` in QGIS.
 
@@ -242,7 +247,7 @@ To zip generation is only for Linux environemnt, to do so in Windows, you will n
 
 .. note::
 
-    - The final step for all environments is run QGIS and open the **Plugins Manager** and enable the wcpms for **development environment**;
+    - The final step for all environments is run QGIS and open the **Plugins Manager** and enable the WCPMS for **development environment**;
     - To develop in WCPMS QGIS Plugin in all operation systems, you will need to install the `QGIS Plugin Reloader <https://plugins.qgis.org/plugins/plugin_reloader/>`_. This plugin will reload any updates after deploys during a QGIS open session, it is useful to test new methods.
 
 
