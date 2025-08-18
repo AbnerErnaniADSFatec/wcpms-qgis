@@ -187,7 +187,7 @@
   <widget class="QPushButton" name="search">
    <property name="geometry">
     <rect>
-     <x>60</x>
+     <x>40</x>
      <y>380</y>
      <width>241</width>
      <height>25</height>
@@ -195,6 +195,19 @@
    </property>
    <property name="text">
     <string>Calculate Phenological Metrics</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="show_help_button">
+   <property name="geometry">
+    <rect>
+     <x>290</x>
+     <y>380</y>
+     <width>31</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
    </property>
   </widget>
  </widget>

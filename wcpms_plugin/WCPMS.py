@@ -188,11 +188,33 @@ class WCPMS:
                 action)
             self.iface.removeToolBarIcon(action)
 
-    def initControls(self):
-        """Init basic controls to generate files and manage services."""
+    def showHelp(self):
+        """Open html doc on default browser."""
+        helpfile = (
+            Path(os.path.abspath(os.path.dirname(__file__)))
+                / 'help' / 'build' / 'html' / 'about.html'
+        )
+        if os.path.exists(helpfile):
+            url = "file://" + str(helpfile)
+            self.iface.openURL(url, False)
+        else:
+            self.basic_controls.alert(
+                "error",
+                "FileNotFoundError",
+                "No help folder found!"
+            )
+        qgis.utils.showPluginHelp(packageName="wlts_plugin", filename="index", section="about")
+
+    def initIcons(self):
+        """Get icons from file system."""
         self.points_layer_icon_path = str(Path(Config.BASE_DIR) / 'assets' / 'marker-icon.png')
         icon = QIcon(str(Path(Config.BASE_DIR) / 'assets' / 'zoom-icon.png'))
         self.dlg.zoom_selected_point.setIcon(icon)
+        icon = QIcon(str(Path(Config.BASE_DIR) / 'assets' / 'interrogation-icon.png'))
+        self.dlg.show_help_button.setIcon(icon)
+
+    def initControls(self):
+        """Init basic controls to generate files and manage services."""
         self.dlg.setWindowFlag(Qt.WindowMaximizeButtonHint, False)
         self.dlg.setFixedSize(self.dlg.size().width(), self.dlg.size().height())
         self.wcpms_controls = WCPMS_Controls()
@@ -362,6 +384,7 @@ class WCPMS:
 
     def initButtons(self):
         self.dlg.search.clicked.connect(self.openPlot)
+        self.dlg.show_help_button.clicked.connect(self.showHelp)
 
     def initParameters(self):
         self.checkFilters()
@@ -424,6 +447,7 @@ class WCPMS:
             # Create the dialog with elements (after translation) and keep reference
             # Only create GUI ONCE in callback, so that it will only load when the plugin is started
             self.dlg = WCPMSDialog()
+            self.initIcons()
             self.initControls()
             self.initListCoverages()
             self.initButtons()

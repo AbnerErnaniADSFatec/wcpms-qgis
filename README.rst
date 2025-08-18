@@ -21,7 +21,7 @@ Python QGIS Plugin for Web Crop Phenology Metrics Service
 =========================================================
 
 .. image:: https://img.shields.io/badge/license-MIT-green
-        :target: https://github.com/GSansigolo/wcpms-qgis/blob/master/LICENSE
+        :target: https://github.com/brazil-data-cube/wtss/blob/master/LICENSE
         :alt: Software License
 
 .. image:: https://img.shields.io/badge/lifecycle-experimental-orange.svg
@@ -35,7 +35,6 @@ Python QGIS Plugin for Web Crop Phenology Metrics Service
 .. image:: https://img.shields.io/discord/689541907621085198?logo=discord&logoColor=ffffff&color=7389D8
         :target: https://discord.com/channels/689541907621085198#
         :alt: Join us at Discord
-
 
 
 Called Web Crop Phenology Metrics Service (WCPMS) the software extracts phenological metrics from big EO image collections, modeled as multidimensional data cubes, produced by the BDC project of INPE.
