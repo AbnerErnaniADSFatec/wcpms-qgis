@@ -130,21 +130,21 @@ To build the plugin image you need to create a new folder in a different path of
     ARG QGIS_RELEASE=3.42
     FROM qgis/qgis:${QGIS_RELEASE}
 
-    ADD wcpms_plugin.zip .
+    ADD WCPMS.zip .
 
     RUN apt-get update && \
         apt-get install -y unzip
 
-    RUN unzip wcpms_plugin.zip -d \
+    RUN unzip WCPMS.zip -d \
         /usr/share/qgis/python/plugins/
 
     RUN python3 -m pip install --user -r \
-        /usr/share/qgis/python/plugins/wcpms_plugin/requirements.txt \
+        /usr/share/qgis/python/plugins/WCPMS/requirements.txt \
         --break-system-packages
 
     RUN mkdir -p ~/.local/share/QGIS/QGIS3/profiles/default/QGIS
 
-    RUN echo -e "\n[PythonPlugins]\nwcpms_plugin=true\n" \
+    RUN echo -e "\n[PythonPlugins]\nWCPMS=true\n" \
         >> ~/.local/share/QGIS/QGIS3/profiles/default/QGIS/QGIS3.ini
 
     CMD /bin/bash
