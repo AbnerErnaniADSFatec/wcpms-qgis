@@ -130,12 +130,15 @@ To build the plugin image you need to create a new folder in a different path of
     ARG QGIS_RELEASE=3.42
     FROM qgis/qgis:${QGIS_RELEASE}
 
-    ADD WCPMS.zip .
+    ARG FILE
+    ENV ZIP_FILE=${FILE}
+
+    ADD ${ZIP_FILE} .
 
     RUN apt-get update && \
         apt-get install -y unzip
 
-    RUN unzip WCPMS.zip -d \
+    RUN unzip ${ZIP_FILE} -d \
         /usr/share/qgis/python/plugins/
 
     RUN python3 -m pip install --user -r \
@@ -147,14 +150,14 @@ To build the plugin image you need to create a new folder in a different path of
     RUN echo -e "\n[PythonPlugins]\nWCPMS=true\n" \
         >> ~/.local/share/QGIS/QGIS3/profiles/default/QGIS/QGIS3.ini
 
-    CMD /bin/bash
+    CMD ["/bin/bash"]
 
 
 Move the `wcpms_plugin.zip` to this folder with `Dockerfile` and run:
 
 .. code-block:: text
 
-    $ docker build -t wcpms_qgis/qgis:3.42 .
+    $ docker build --build-arg FILE="<zip_file_name>" -t wcpms_qgis/qgis:3.42 .
 
 
 To get the `wcpms_plugin.zip` you can run the `pb_tool zip` command described previously, or download the latest version in `https://github.com/brazil-data-cube/wcpms-qgis/releases <https://github.com/brazil-data-cube/wcpms-qgis/releases>`_.

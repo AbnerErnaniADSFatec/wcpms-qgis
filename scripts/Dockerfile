@@ -23,12 +23,15 @@
 ARG QGIS_RELEASE=3.42
 FROM qgis/qgis:${QGIS_RELEASE}
 
-ADD WCPMS.zip .
+ARG FILE
+ENV ZIP_FILE=${FILE}
+
+ADD ${ZIP_FILE} .
 
 RUN apt-get update && \
     apt-get install -y unzip
 
-RUN unzip WCPMS.zip -d \
+RUN unzip ${ZIP_FILE} -d \
     /usr/share/qgis/python/plugins/
 
 RUN python3 -m pip install --user -r \
@@ -40,4 +43,4 @@ RUN mkdir -p ~/.local/share/QGIS/QGIS3/profiles/default/QGIS
 RUN echo -e "\n[PythonPlugins]\nWCPMS=true\n" \
       >> ~/.local/share/QGIS/QGIS3/profiles/default/QGIS/QGIS3.ini
 
-CMD /bin/bash
+CMD ["/bin/bash"]
