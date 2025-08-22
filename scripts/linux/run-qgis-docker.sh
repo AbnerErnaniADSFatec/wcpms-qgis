@@ -23,6 +23,12 @@ then
 	QGIS_RELEASE=3.42
 fi
 
+if [ "$ZIPFILE" = "" ];
+then
+	echo "Using zip file WCPMS.zip..."
+	ZIPFILE="./wcpms_plugin/zip_build/WCPMS.zip"
+fi
+
 if [ "$BUILD" = "" ];
 then
 	echo "Building image for WCPMS-QGIS..."
@@ -34,7 +40,7 @@ then
 
 	docker rmi wcpms_qgis/qgis:$QGIS_RELEASE --force
 
-	docker build -t wcpms_qgis/qgis:$QGIS_RELEASE .
+	docker build --build-arg FILE=$ZIPFILE -t wcpms_qgis/qgis:$QGIS_RELEASE .
 fi
 
 xhost +local:docker
